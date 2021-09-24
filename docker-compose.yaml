@@ -1,0 +1,53 @@
+version: "3"
+
+services:
+  db:
+    image: postgres:13-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data:z
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      default:
+        ipv4_address: ${NETWORK_PREFIX}.2
+
+  dehub-rest:
+    restart: unless-stopped
+    image: ${DEHUB_REST_IMAGE} 
+    environment:
+      JAVA_OPTS: ${JAVA_OPTS}
+      ISSUER_URI: ${AUTH_REALM_URL}
+      JWK_SET_URI: ${AUTH_REALM_URL}/protocol/openid-connect/certs
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USER_NAME: ${DB_USER_NAME}
+      DB_USER_PW: ${DB_USER_PW}
+    volumes:
+      - ./data/log/:/var/log
+      - ./certs/:/usr/local/share/ca-certificates/
+    depends_on:
+      - db
+    networks:
+      default:
+        ipv4_address: ${NETWORK_PREFIX}.3
+
+  dehub-gui:
+    restart: unless-stopped
+    image: ${DEHUB_GUI_IMAGE}
+    depends_on:
+      - dehub-rest
+    networks:
+      default:
+        ipv4_address: ${NETWORK_PREFIX}.4
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: ${NETWORK_PREFIX}.0/24
+
+volumes:
+  db:
+
