@@ -35,9 +35,15 @@ services:
 
   dehub-gui:
     restart: unless-stopped
-    image: ${DEHUB_GUI_IMAGE}
-    depends_on:
-      - dehub-rest
+    build:
+      context: https://github.com/imi-frankfurt/dataelementhub.gui.git#${GUI_TAG}
+      dockerfile: ./docker/Dockerfile
+      args:
+        KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+        KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID}
+        KEYCLOAK_URL: ${KEYCLOAK_URL}
+        BASE_URL: ${BASE_URL}
+        BACKEND_URL: ${BACKEND_URL}
     networks:
       default:
         ipv4_address: ${NETWORK_PREFIX}.4
